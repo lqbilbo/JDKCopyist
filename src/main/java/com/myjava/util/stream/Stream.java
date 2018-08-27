@@ -45,7 +45,7 @@ import java.util.stream.*;
  * Stream pipelines可以串行也可以并行执行。这个执行模式是stream的属性。Streams通过选择sequential或parallel来决定。可以通过方法
  * {@link java.util.stream.Stream#isParallel()}检测
  */
-public interface Stream<T> extends BaseStream<T, Stream<T>> {
+public interface Stream<T> extends java.util.stream.BaseStream<T, Stream<T>> {
 
     Stream<T> filter(Predicate<? super T> predicate);
 
