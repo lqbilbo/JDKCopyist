@@ -1,9 +1,11 @@
 package com.myjava.util.concurrent.atomic;
 
-import sun.misc.Unsafe;
+import jdk.internal.misc.Unsafe;
 
 import java.io.Serializable;
 import java.lang.invoke.VarHandle;
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntUnaryOperator;
 
 /**
  * {@code int}值的更新是原子的。{@link java.lang.invoke.VarHandle}指定描述了原子访问的属性。
@@ -13,7 +15,7 @@ import java.lang.invoke.VarHandle;
 public class AtomicInteger extends Number implements Serializable {
     private static final long serialVersionUID = 6803068572428032944L;
 
-    private static final Unsafe U = Unsafe.getUnsafe();
+    private static final jdk.internal.misc.Unsafe U = Unsafe.getUnsafe();
     private static final long VALUE = U.objectFieldOffset(AtomicInteger.class, "value");
 
     private volatile int value;
@@ -65,5 +67,84 @@ public class AtomicInteger extends Number implements Serializable {
         value = newValue;
     }
 
+    public final void lazySet(int newValue) {
+        U.putIntRelease(this, value, newValue);
+    }
+
+    public final int getAndSet(int newValue) {
+        return U.getAndSetInt(this, VALUE, newValue);
+    }
+
+    public final boolean compareAndSet(int expectedValue, int newValue) {
+        return U.compareAndSetInt(this, VALUE, expectedValue, newValue);
+    }
+
+    public final boolean weakCompareAndSetPlain(int expectedValue, int newValue) {
+        return U.weakCompareAndSetIntPlain(this, VALUE, expectedValue, newValue);
+    }
+
+    public final int getAndUpdate(IntUnaryOperator updateFunction) {
+        int prev = get(), next = 0;
+        for (boolean haveNext = false;;) {
+            if (!haveNext) {
+                next = updateFunction.applyAsInt(prev);
+            }
+            if (weakCompareAndSetVolatile(prev, next)) {
+                return prev;
+            }
+            haveNext = (prev == (prev = get()));
+        }
+    }
+
+    public final int updateAndGet(IntUnaryOperator updateFunction) {
+        int prev = get(), next = 0;
+        for (boolean haveNext = false;;) {
+            if (!haveNext) {
+                next = updateFunction.applyAsInt(prev);
+            }
+            if (weakCompareAndSetVolatile(prev, next)) {
+                return next;
+            }
+            haveNext = (prev == (prev = get()));
+        }
+    }
+
+    public final int getAndAccumulate(int x, IntBinaryOperator accumulatorFunction) {
+        int prev = get(), next = 0;
+        for (boolean haveNext = false;;) {
+            if (!haveNext) {
+                next = accumulatorFunction.applyAsInt(prev, x);
+            }
+            if (weakCompareAndSetVolatile(prev, next)) {
+                return prev;
+            }
+            haveNext = (prev == (prev = get()));
+        }
+    }
+
+    public final int accumulateAndGet(int x, IntBinaryOperator accumulatorFunction) {
+        int prev = get(), next = 0;
+        for (boolean haveNext = false;;) {
+            if (!haveNext) {
+                next = accumulatorFunction.applyAsInt(prev, x);
+            }
+            if (weakCompareAndSetVolatile(prev, next)) {
+                return next;
+            }
+            haveNext = (prev == (prev = get()));
+        }
+    }
+
+    public final int compareAndExchange(int expectedValue, int newValue) {
+        return U.compareAndExchangeInt(this, VALUE, expectedValue, newValue);
+    }
+
+    public final int compareAndExchangeAcquire(int expectedValue, int newValue) {
+        return U.compareAndExchangeIntAcquire(this, VALUE, expectedValue, newValue);
+    }
+
+    public final boolean weakCompareAndSetVolatile(int expectedValue, int newValue) {
+        return U.weakCompareAndSetInt(this, VALUE, expectedValue, newValue);
+    }
 }
 
