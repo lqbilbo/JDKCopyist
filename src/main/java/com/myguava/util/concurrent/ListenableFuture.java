@@ -2,6 +2,8 @@ package com.myguava.util.concurrent;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Function;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -32,5 +34,27 @@ import java.util.concurrent.Future;
 @GwtCompatible
 public interface ListenableFuture<V> extends Future<V> {
 
+    /**
+     * 注册listener在给定的executor上执行{@linkplain Executor#execute(Runnable) run}。这个
+     * listener会在{@code Future}的计算{@linkplain Future#isDone()}完成的时候运行。如果计算已经
+     * 完成，那么就会立即执行。
+     * 没有确保的执行顺序，然而通过这个方法添加的任何listener可以保证计算完成的时候立马调用。
+     * 被listener抛出的异常会传递给执行者。在{@code Executor.execute}期间抛出的异常，比如
+     * {@code RejectedExecutionException}或者被{@linkplain MoreExecutors#directExecutor()}抛出
+     * 的异常会立即抓住并记录日志。
+     * 记住：为了快捷，轻量级的listener在任何线程中执行时都是安全的，可以看下{@link MoreExecutors#directExecutor()}.
+     * 然而，重量级的{@code directExecutor}listeners会导致问题，这些问题很难暴露出来因为它们依赖于时间。
+     * 比如：
+     * listener通过{@code addListener}方法的调用被执行。调用者可能是UI线程或者其他队延迟比较敏感的线程。
+     * 这个会影响UI的响应性。listener会通过完成{@code Future}的线程来执行。这个线程如果是类似RPC网络线程
+     * 这样的内部系统线程。阻塞线程会影响整个系统的进程。它甚至会造成死锁。
+     * listener会导致其他监听器的延迟，甚至不是{@code directExecutor}监听.
+     *
+     * 这就是最常用的listener接口。更加通用的监听器操作可以看下{@link com.google.common.util.concurrent.Futures}。
+     * 如果想看简化版的listener接口，看下{@link com.google.common.util.concurrent.Futures#addCallback(com.google.common.util.concurrent.ListenableFuture, FutureCallback)}
+     *
+     *  @param listener 当计算完成时运行的listener
+     * @param executor 监听器的执行者
+     */
     void addListener(Runnable listener, Executor executor);
 }
