@@ -1,6 +1,7 @@
 package com.myjava.util.concurrent.locks;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
 
 public interface Lock {
 
