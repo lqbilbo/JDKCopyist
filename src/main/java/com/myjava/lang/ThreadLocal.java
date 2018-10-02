@@ -62,8 +62,22 @@ public class ThreadLocal<T> {
 
     public T get() {
         Thread t = Thread.currentThread();
-        ThreadLocalMap
+       // do something
+        return null;
     }
+
+    public void set(T value) {
+        //do something
+    }
+
+    public void remove() {
+        //do something
+    }
+
+    T childValue(T parentValue) {
+        throw new UnsupportedOperationException();
+    }
+
 
     static final class SuppliedThreadLocal<T> extends ThreadLocal<T> {
         private final Supplier<? extends T> supplier;
@@ -78,6 +92,12 @@ public class ThreadLocal<T> {
         }
     }
 
+    /**
+     * ThreadLocalMap是自定义的为了维护Thread local变量的hashmap。
+     * 在ThreadLocal类之外没有任何操作。这个类是包私有的只允许类线程中的域的声明。
+     * 为了处理大量的和持久存在变量的用途，hash table入口使用了keys的弱引用。然而，
+     * 既然引用队列没有使用，过期的入口保证只有当table重新申请才会被清除。
+     */
     static class ThreadLocalMap {
 
         /**
